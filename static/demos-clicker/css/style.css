@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Potta+One&display=swap');
+
+#rectangle {
+    position: absolute;
+    border: 2px solid black;
+    top: 10%;
+    height: 3%;
+    width: 3%;
+    transition: all 0.5s ease-in-out;
+}
+
+.hud {
+    display: block;
+    text-align: center;
+    position: absolute;
+    width: 10rem;
+    font-family: 'Potta One';
+    user-select: none;
+}
+
+#timer {
+    top: 0.1rem;
+    left: 0.5rem;
+    font-size: 2rem;
+}
+
+#player {
+    top: 2.1rem;
+    right: 0.5rem;
+}
+
+#clicks {
+    top: 0.1rem;
+    right: 0.5rem;
+    font-size: 2rem;
+}
+
+#rectangle #timer {
+    position: relative;
+    width: 1rem;
+    left: 0.1rem;
+    font-size: 0.5rem;
+}

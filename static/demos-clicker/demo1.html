@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Demo Click v1</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="js/game1.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<script>
+    $(document).ready(function(){
+        var myGame = new Game1(3);
+        myGame.updateClicks();
+        $('#rectangle').on("click", function (e) {
+            myGame.click(1);
+        });
+        myGame.randomRectangle();
+    });
+</script>
+<span id="rectangle"><span id="timer" class="hud"></span></span>
+<span id="player" class="hud"></span>
+<span id="clicks" class="hud"></span>
+</body>
+</html>
