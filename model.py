@@ -67,6 +67,26 @@ def seed_db(app, guard):
             Player(name="Antonio González", user=users[5])
         ]
 
+        teams = [
+            Team(name="Los pejelagartos", player=players[0]),
+            Team(name="Rotísimos", player=players[1])
+        ]
+        countries = [
+            Country(name="España"),
+            Country(name="Alemania")
+        ]
+
+        localities = [
+            Location(name="Jerez de la Frontera", player=players[0]),
+            Location(name="Chiclana de la Frontera", player=players[1])
+        ]
+
+        regions = [
+            Region(name="Cádiz", country=countries[0]),
+            Region(name="Cádiz", country=countries[1])
+        ]
+
+
         pets = [
             Pet(name="Estrella", species="Perro", breed="Caniche", owner=owners[0]),
             Pet(name="Petardo", species="Perro", breed="Galgo", owner=owners[1]),
@@ -79,9 +99,19 @@ def seed_db(app, guard):
             db.session.add(user)
         for owner in owners:
             db.session.add(owner)
-        # Añadimos los jugadores definidos en la BD
+
+        # Añadimos los jugadores, equipos, localidades, regiones y paises definidos en la BD
         for player in players:
             db.session.add(player)
+        for team in teams:
+            db.session.add(team)
+        for location in localities:
+            db.session.add(location)
+        for region in regions:
+            db.session.add(region)
+        for country in countries:
+            db.session.add(country)
+
         for pet in pets:
             db.session.add(pet)
         # commit changes in database
@@ -92,6 +122,12 @@ def seed_db(app, guard):
 roles_users = db.Table('roles_users',
                        db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
                        db.Column('role_id', db.Integer, db.ForeignKey('role.id'), primary_key=True)
+                       )
+
+# table for N:M relationship team to player
+teams_players = db.Table('teams_players',
+                       db.Column('player_id', db.Integer, db.ForeignKey('player.id'), primary_key=True),
+                       db.Column('team_id', db.Integer, db.ForeignKey('team.id'), primary_key=True)
                        )
 
 
@@ -222,8 +258,68 @@ class Player(db.Model):
     # Esta parte nola entiendo, creo que por la relacion user player.
     user = db.relationship("User", backref=db.backref("player", uselist=False))
 
+    # M:1 player-location
+    location_id = db.Column(db.Integer, db.ForeignKey('location.id'))
+    # TODO: test cascade behaviour
+    location = db.relationship("Location", backref="players")
+
+    # M:N relationship
+    teams = db.relationship('Team', secondary=teams_players)
+    is_active = db.Column(db.Boolean, default=True, server_default="true")
+
     def __repr__(self):
         return f"<Player {self.name}"
+
+
+
+class Team(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=False, nullable=False)
+
+    # M:N relationship
+    players = db.relationship('Team', secondary=teams_players)
+    is_active = db.Column(db.Boolean, default=True, server_default="true")
+
+    def __repr__(self):
+        return f"<Team {self.name}"
+
+
+class Location(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=False, nullable=False)
+
+    players = db.relationship("Player")
+    # M:1 location-region
+    region_id = db.Column(db.Integer, db.ForeignKey('region.id'))
+    # TODO: test cascade behaviour
+    region = db.relationship("Region", backref="localities")
+
+    def __repr__(self):
+        return f"<Location {self.name}"
+
+
+class Region(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=False, nullable=False)
+
+    localities = db.relationship("Location")
+    # M:1 region-country
+    country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
+    # TODO: test cascade behaviour
+    country = db.relationship("Country", backref="regions")
+
+    def __repr__(self):
+        return f"<Region {self.name}"
+
+
+class Country(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=False, nullable=False)
+    regions = db.relationship("Region")
+
+    def __repr__(self):
+        return f"<Country {self.name}"
+
 
 class Pet(db.Model):
     """
@@ -263,6 +359,35 @@ class OwnerSchema(SQLAlchemyAutoSchema):
 class PlayerSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Player
+        include_relationships = True
+        load_instance = True
+        sqla_session = db.session
+
+
+class TeamSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Team
+        include_relationships = True
+        load_instance = True
+        sqla_session = db.session
+
+class LocationSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Location
+        include_relationships = True
+        load_instance = True
+        sqla_session = db.session
+
+class RegionSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Region
+        include_relationships = True
+        load_instance = True
+        sqla_session = db.session
+
+class CountrySchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Country
         include_relationships = True
         load_instance = True
         sqla_session = db.session
