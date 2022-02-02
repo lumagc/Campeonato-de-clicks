@@ -50,22 +50,38 @@ def seed_db(app, guard):
             User(username="selena", email="selena@a.a",
                  hashed_password=guard.hash_password("pestillo"),
                  roles=[roles[2]]),
+            User(username="lual", email="lual@clic.com",
+                 hashed_password=guard.hash_password("pestillo"),
+                 roles=[roles[0]]),
+            User(username="antojo", email="antojo@clic.com",
+                 hashed_password=guard.hash_password("pestillo"),
+                 roles=[roles[2]]),
         ]
         owners = [
             Owner(name="Juan Pérez", user=users[0]),
             Owner(name="María López", user=users[1]),
         ]
+        # Definimos los jugadores
+        players = [
+            Player(name="Lucía Gutiérrez", user=users[4]),
+            Player(name="Antonio González", user=users[5])
+        ]
+
         pets = [
             Pet(name="Estrella", species="Perro", breed="Caniche", owner=owners[0]),
             Pet(name="Petardo", species="Perro", breed="Galgo", owner=owners[1]),
             Pet(name="Nala", species="Perro", breed="Galgo", owner=owners[1]),
             Pet(name="Mora", species="Gato", breed="Egipcio", owner=owners[1]),
         ]
+
         # add data from lists
         for user in users:
             db.session.add(user)
         for owner in owners:
             db.session.add(owner)
+        # Añadimos los jugadores definidos en la BD
+        for player in players:
+            db.session.add(player)
         for pet in pets:
             db.session.add(pet)
         # commit changes in database
@@ -195,6 +211,19 @@ class Owner(db.Model):
     def __repr__(self):
         return f"<User {self.name}>"
 
+# Necesitamos el modelo Player para ello creamos su respectiva clase.
+class Player(db.Model):
+
+    # Atributos de player
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=False, nullable=False)
+    user_id = db.Column(db.integer, db.ForeignKey("user.id"))
+
+    # Esta parte nola entiendo, creo que por la relacion user player.
+    user = db.relationship("User", backref=db.backref("player", uselist=False))
+
+    def __repr__(self):
+        return f"<Player {self.name}"
 
 class Pet(db.Model):
     """
@@ -231,6 +260,12 @@ class OwnerSchema(SQLAlchemyAutoSchema):
         load_instance = True
         sqla_session = db.session
 
+class PlayerSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Player
+        include_relationships = True
+        load_instance = True
+        sqla_session = db.session
 
 class PetSchema(SQLAlchemyAutoSchema):
     class Meta:
