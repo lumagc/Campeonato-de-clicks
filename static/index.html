@@ -3,8 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>RESTFul API example in Flask</title>
+    <style>
+        .rectangulo{
+            border: 2px solid #21ac8e;
+            width: 150px;
+            height: 45px;
+            text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 43%;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-Here is the <a href="/api/">api</a>
+    Here is the <a href="/api/">api</a>
+    <div class="rectangulo">clic here!</div>
+    <script>
+        //92 left 94 top
+        let cuadro = document.querySelector('.rectangulo');
+        cuadro.addEventListener("click", function() {
+            cuadro.style.top = `${Math.floor(Math.random() * (94 - 1)) + 1}%`
+            cuadro.style.left = `${Math.floor(Math.random() * (92 - 1)) + 1}%`
+        })
+    </script>
 </body>
 </html>

@@ -62,28 +62,30 @@ def seed_db(app, guard):
             Owner(name="María López", user=users[1]),
         ]
         # Definimos los jugadores
+
         players = [
             Player(name="Lucía Gutiérrez", user=users[4]),
             Player(name="Antonio González", user=users[5])
         ]
 
-        teams = [
-            Team(name="Los pejelagartos", player=players[0]),
-            Team(name="Rotísimos", player=players[1])
-        ]
-        countries = [
-            Country(name="España"),
-            Country(name="Alemania")
+        localities = [
+            Location(name="Jerez de la Frontera", players=[players[0]]),
+            Location(name="Chiclana de la Frontera", players=[players[1]])
         ]
 
-        localities = [
-            Location(name="Jerez de la Frontera", player=players[0]),
-            Location(name="Chiclana de la Frontera", player=players[1])
+        teams = [
+            Team(name="Los pejelagartos", players=[players[0]]),
+            Team(name="Rotísimos", players=[players[1]])
         ]
 
         regions = [
-            Region(name="Cádiz", country=countries[0]),
-            Region(name="Cádiz", country=countries[1])
+            Region(name="Cádiz", localities=[localities[0]]),
+            Region(name="Cádiz", localities=[localities[1]])
+        ]
+
+        countries = [
+            Country(name="España", regions=[regions[0]]),
+            Country(name="Alemania", regions=[regions[1]])
         ]
 
 
@@ -253,7 +255,7 @@ class Player(db.Model):
     # Atributos de player
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False)
-    user_id = db.Column(db.integer, db.ForeignKey("user.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
     # Esta parte nola entiendo, creo que por la relacion user player.
     user = db.relationship("User", backref=db.backref("player", uselist=False))
@@ -264,7 +266,7 @@ class Player(db.Model):
     location = db.relationship("Location", backref="players")
 
     # M:N relationship
-    teams = db.relationship('Team', secondary=teams_players)
+    #teams = db.relationship('Team', secondary=teams_players)
     is_active = db.Column(db.Boolean, default=True, server_default="true")
 
     def __repr__(self):
@@ -277,8 +279,7 @@ class Team(db.Model):
     name = db.Column(db.String(80), unique=False, nullable=False)
 
     # M:N relationship
-    players = db.relationship('Team', secondary=teams_players)
-    is_active = db.Column(db.Boolean, default=True, server_default="true")
+    players = db.relationship('Player', secondary=teams_players)
 
     def __repr__(self):
         return f"<Team {self.name}"
@@ -288,11 +289,10 @@ class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False)
 
-    players = db.relationship("Player")
     # M:1 location-region
     region_id = db.Column(db.Integer, db.ForeignKey('region.id'))
     # TODO: test cascade behaviour
-    region = db.relationship("Region", backref="localities")
+    #region = db.relationship("Region", backref="localities")
 
     def __repr__(self):
         return f"<Location {self.name}"
@@ -302,11 +302,11 @@ class Region(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False)
 
-    localities = db.relationship("Location")
+    localities = db.relationship("Location", backref="localities")
     # M:1 region-country
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
     # TODO: test cascade behaviour
-    country = db.relationship("Country", backref="regions")
+    #country = db.relationship("Country", backref="regions")
 
     def __repr__(self):
         return f"<Region {self.name}"
@@ -315,7 +315,7 @@ class Region(db.Model):
 class Country(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False)
-    regions = db.relationship("Region")
+    regions = db.relationship("Region", backref="regions")
 
     def __repr__(self):
         return f"<Country {self.name}"
