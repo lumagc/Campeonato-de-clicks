@@ -1,5 +1,6 @@
 import flask_praetorian
-from flask import request
+import sqlalchemy
+from flask import request, jsonify
 from flask_restx import abort, Resource, Namespace
 from model import Location, db, LocationSchema
 
@@ -42,3 +43,19 @@ class LocationListController(Resource):
         db.session.add(location)
         db.session.commit()
         return LocationSchema().dump(location), 201
+
+@api_location.route("points/<location_id>")
+class LocationController(Resource):
+    @flask_praetorian.auth_required
+    def get(self, location_id):
+        query = sqlalchemy.text('SELECT L.name, SUM(P.points) AS points FROM player P INNER JOIN location L ON L.id WHERE L.id = ' + location_id + ' GROUP BY L.name')
+        data = db.session.execute(query)
+        return jsonify({r['name'] : r['points'] for r in data})
+
+@api_location.route("/points/")
+class LocationListController(Resource):
+    @flask_praetorian.auth_required
+    def get(self):
+        query = sqlalchemy.text('SELECT L.name, SUM(P.points) AS points FROM player P INNER JOIN location L ON L.id = P.location_id GROUP BY L.name ORDER BY points desc')
+        data = db.session.execute(query)
+        return jsonify({d['name'] : d['points'] for d in data})

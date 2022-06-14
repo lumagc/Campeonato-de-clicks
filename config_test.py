@@ -1,11 +1,12 @@
+
 """
 App configuration
 """
-import os
 
 ###
 # database configuration
-SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.abspath(os.curdir)}/flask.db"
+TESTING = True
+SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 ###

@@ -6,7 +6,7 @@ from sqlalchemy_utils import database_exists
 db = SQLAlchemy()
 
 
-def init_db(app, guard):
+def init_db(app, guard, testing=False):
     """
     Initializes database
 
@@ -14,7 +14,7 @@ def init_db(app, guard):
     :param guard: praetorian object for password hashing if seeding needed
     """
     db.init_app(app)
-    if not database_exists(app.config['SQLALCHEMY_DATABASE_URI']):
+    if testing or not database_exists(app.config['SQLALCHEMY_DATABASE_URI']):
         # if there is no database file
         # migrate model
         db.create_all(app=app)
@@ -57,50 +57,32 @@ def seed_db(app, guard):
                  hashed_password=guard.hash_password("pestillo"),
                  roles=[roles[2]]),
         ]
-        owners = [
-            Owner(name="Juan Pérez", user=users[0]),
-            Owner(name="María López", user=users[1]),
-        ]
+
         # Definimos los jugadores
+        teams = [
+            Team(name="Los pejelagartos"),
+            Team(name="Rotísimos")
+        ]
 
         players = [
-            Player(name="Lucía Gutiérrez", user=users[4]),
-            Player(name="Antonio González", user=users[5])
+            Player(name="Lucía Gutiérrez", user=users[4], points=100, location_id=1, teams=[teams[1]]),
+            Player(name="Antonio González", user=users[5], points=30, location_id=1, teams=[teams[0]])
         ]
 
         localities = [
-            Location(name="Jerez de la Frontera", players=[players[0]]),
-            Location(name="Chiclana de la Frontera", players=[players[1]])
-        ]
-
-        teams = [
-            Team(name="Los pejelagartos", players=[players[0]]),
-            Team(name="Rotísimos", players=[players[1]])
+            Location(name="Jerez de la Frontera", region_id=0),
+            Location(name="Chiclana de la Frontera", region_id=1)
         ]
 
         regions = [
-            Region(name="Cádiz", localities=[localities[0]]),
-            Region(name="Cádiz", localities=[localities[1]])
+            Region(name="Cádiz", country_id=0),
+            Region(name="Cádiz", cuntry_id=1)
         ]
 
         countries = [
-            Country(name="España", regions=[regions[0]]),
-            Country(name="Alemania", regions=[regions[1]])
+            Country(name="España"),
+            Country(name="Alemania")
         ]
-
-
-        pets = [
-            Pet(name="Estrella", species="Perro", breed="Caniche", owner=owners[0]),
-            Pet(name="Petardo", species="Perro", breed="Galgo", owner=owners[1]),
-            Pet(name="Nala", species="Perro", breed="Galgo", owner=owners[1]),
-            Pet(name="Mora", species="Gato", breed="Egipcio", owner=owners[1]),
-        ]
-
-        # add data from lists
-        for user in users:
-            db.session.add(user)
-        for owner in owners:
-            db.session.add(owner)
 
         # Añadimos los jugadores, equipos, localidades, regiones y paises definidos en la BD
         for player in players:
@@ -114,8 +96,6 @@ def seed_db(app, guard):
         for country in countries:
             db.session.add(country)
 
-        for pet in pets:
-            db.session.add(pet)
         # commit changes in database
         db.session.commit()
 
@@ -128,9 +108,9 @@ roles_users = db.Table('roles_users',
 
 # table for N:M relationship team to player
 teams_players = db.Table('teams_players',
-                       db.Column('player_id', db.Integer, db.ForeignKey('player.id'), primary_key=True),
-                       db.Column('team_id', db.Integer, db.ForeignKey('team.id'), primary_key=True)
-                       )
+                         db.Column('player_id', db.Integer, db.ForeignKey('player.id'), primary_key=True),
+                         db.Column('team_id', db.Integer, db.ForeignKey('team.id'), primary_key=True)
+                         )
 
 
 # classes for model entities
@@ -234,55 +214,34 @@ class Role(db.Model):
         return f"<Role {self.name}>"
 
 
-class Owner(db.Model):
-    """
-    Owner entity
-
-    Store owner data
-    """
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=False, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    # TODO: test cascade behaviour
-    user = db.relationship("User", backref=db.backref("owner", uselist=False))
-
-    def __repr__(self):
-        return f"<User {self.name}>"
-
 # Necesitamos el modelo Player para ello creamos su respectiva clase.
 class Player(db.Model):
-
     # Atributos de player
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False)
+    points = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-
     # Esta parte nola entiendo, creo que por la relacion user player.
     user = db.relationship("User", backref=db.backref("player", uselist=False))
 
     # M:1 player-location
     location_id = db.Column(db.Integer, db.ForeignKey('location.id'))
-    # TODO: test cascade behaviour
-    location = db.relationship("Location", backref="players")
+    location = db.relationship("Location", backref="Player")
 
     # M:N relationship
-    #teams = db.relationship('Team', secondary=teams_players)
+    teams = db.relationship('Team', secondary=teams_players)
     is_active = db.Column(db.Boolean, default=True, server_default="true")
 
     def __repr__(self):
-        return f"<Player {self.name}"
-
+        return f"<User {self.name}"
 
 
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False)
 
-    # M:N relationship
-    players = db.relationship('Player', secondary=teams_players)
-
     def __repr__(self):
-        return f"<Team {self.name}"
+        return f"<User {self.name}"
 
 
 class Location(db.Model):
@@ -291,52 +250,30 @@ class Location(db.Model):
 
     # M:1 location-region
     region_id = db.Column(db.Integer, db.ForeignKey('region.id'))
-    # TODO: test cascade behaviour
-    #region = db.relationship("Region", backref="localities")
+    region = db.relationship("Region", backref="Location")
 
     def __repr__(self):
-        return f"<Location {self.name}"
+        return f"<User {self.name}"
 
 
 class Region(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False)
 
-    localities = db.relationship("Location", backref="localities")
     # M:1 region-country
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
-    # TODO: test cascade behaviour
-    #country = db.relationship("Country", backref="regions")
+    country = db.relationship("Country", backref="Region")
 
     def __repr__(self):
-        return f"<Region {self.name}"
+        return f"<User {self.name}"
 
 
 class Country(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False)
-    regions = db.relationship("Region", backref="regions")
 
     def __repr__(self):
-        return f"<Country {self.name}"
-
-
-class Pet(db.Model):
-    """
-    Pet entity
-
-    Store pet data
-    """
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=False, nullable=False)
-    species = db.Column(db.String(80), unique=False, nullable=True)
-    breed = db.Column(db.String(80), unique=False, nullable=True)
-    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'))
-    # TODO: test cascade behaviour
-    owner = db.relationship("Owner", backref="pets")
-
-    def __repr__(self):
-        return f"<User {self.name}>"
+        return f"<User {self.name}"
 
 
 # Marshmallow schemas definition
@@ -348,13 +285,6 @@ class UserSchema(SQLAlchemyAutoSchema):
         load_instance = True
         sqla_session = db.session
 
-
-class OwnerSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = Owner
-        include_relationships = True
-        load_instance = True
-        sqla_session = db.session
 
 class PlayerSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -371,12 +301,14 @@ class TeamSchema(SQLAlchemyAutoSchema):
         load_instance = True
         sqla_session = db.session
 
+
 class LocationSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Location
         include_relationships = True
         load_instance = True
         sqla_session = db.session
+
 
 class RegionSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -385,16 +317,10 @@ class RegionSchema(SQLAlchemyAutoSchema):
         load_instance = True
         sqla_session = db.session
 
+
 class CountrySchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Country
-        include_relationships = True
-        load_instance = True
-        sqla_session = db.session
-
-class PetSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = Pet
         include_relationships = True
         load_instance = True
         sqla_session = db.session
