@@ -89,7 +89,7 @@ def test_updateUser(client):
 
     headers = Headers()
     headers.add('Authorization', f"Bearer {rsp['access_token']}")
-    rv = client.post('/api/user/1', headers=headers, follow_redirects=True, json={'id': 1, 'email': 'juanito@clic.com', 'username': 'juanito'})
+    rv = client.put('/api/user/1', headers=headers, follow_redirects=True, json={'id': 1, 'email': 'juanito@clic.com', 'username': 'juanito'})
     rsp = rv.get_json()
 
     assert "juanito" == rsp.get("username")
