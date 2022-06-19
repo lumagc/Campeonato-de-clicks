@@ -43,18 +43,18 @@ class TeamListController(Resource):
         db.session.commit()
         return TeamSchema().dump(team), 201
 
-@api_team.route("points/<team_id>")
+@api_team.route("/points/<team_id>")
 class PlayerController(Resource):
     @flask_praetorian.auth_required
     def get(self, team_id):
-        query = sqlalchemy.text('SELECT T.name, SUM(P.points) AS points FROM team_players TP INNER JOIN player P ON TP.player_id = P.id INNER JOIN team T ON TP.team_id = T.id WHERE TP.team_id = ' + team_id + ' GROUP BY TP.team_id')
+        query = sqlalchemy.text('SELECT T.name, SUM(P.points) AS points FROM teams_players TP INNER JOIN player P ON TP.player_id = P.id INNER JOIN team T ON TP.team_id = T.id WHERE TP.team_id = ' + team_id + ' GROUP BY TP.team_id')
         data = db.session.execute(query)
-        return jsonify({r['name'] : r['points'] for r in data})
+        return jsonify({d['name'] : d['points'] for d in data})
 
 @api_team.route("/points/")
 class TeamListController(Resource):
     @flask_praetorian.auth_required
     def get(self):
-        query = sqlalchemy.text('SELECT T.name, SUM(P.points) AS points FROM team_players TP INNER JOIN player p ON TP.player_id = P.id INNER JOIN team T ON TP.team_id = T.id GROUP BY TP.team_id ORDER BY points desc')
+        query = sqlalchemy.text('SELECT T.name, SUM(P.points) AS points FROM teams_players TP INNER JOIN player p ON TP.player_id = P.id INNER JOIN team T ON TP.team_id = T.id GROUP BY TP.team_id ORDER BY points desc')
         data = db.session.execute(query)
         return jsonify({d['name']: d['points'] for d in data})

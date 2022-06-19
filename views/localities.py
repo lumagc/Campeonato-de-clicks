@@ -12,7 +12,7 @@ class LocationController(Resource):
     @flask_praetorian.auth_required
     def get(self, location_id):
         location = Location.query.get_or_404(location_id)
-        return LocationSchema.dump(location)
+        return LocationSchema().dump(location)
 
     # roles accepted (user with one of these roles)
     @flask_praetorian.roles_accepted("admin", "editor")
@@ -44,7 +44,7 @@ class LocationListController(Resource):
         db.session.commit()
         return LocationSchema().dump(location), 201
 
-@api_location.route("points/<location_id>")
+@api_location.route("/points/<location_id>")
 class LocationController(Resource):
     @flask_praetorian.auth_required
     def get(self, location_id):

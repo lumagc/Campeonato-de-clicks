@@ -44,13 +44,13 @@ class RegionListController(Resource):
         db.session.commit()
         return RegionSchema().dump(region), 201
 
-@api_region.route("points/<region_id>")
+@api_region.route("/points/<region_id>")
 class RegionController(Resource):
     @flask_praetorian.auth_required
     def get(self, region_id):
         query = sqlalchemy.text('SELECT R.name, SUM(P.points) AS points FROM player P INNER JOIN location L ON L.id = P.location_id INNER JOIN region R ON R.id = L.region_id WHERE R.id = ' + region_id + ' GROUP BY R.name')
         data = db.session.execute(query)
-        return jsonify({r['name'] : r['points'] for r in data})
+        return jsonify({d['name'] : d['points'] for d in data})
 
 @api_region.route("/points/")
 class RegionListController(Resource):

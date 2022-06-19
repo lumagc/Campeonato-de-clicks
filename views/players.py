@@ -53,7 +53,6 @@ class PlayerController(Resource):
     @flask_praetorian.auth_required
     def post(self, player_id):
         player = Player.query.get_or_404(player_id)
-        #player.points += request.json["clicks"]
         db.session.commit()
         return PlayerSchema().dump(player), 201
 

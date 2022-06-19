@@ -64,19 +64,19 @@ def seed_db(app, guard):
             Team(name="Rotísimos")
         ]
 
-        players = [
-            Player(name="Lucía Gutiérrez", user=users[4], points=100, location_id=1, teams=[teams[1]]),
-            Player(name="Antonio González", user=users[5], points=30, location_id=1, teams=[teams[0]])
+        regions = [
+            Region(name="Cádiz", country_id=1),
+            Region(name="Berlín", country_id=2)
         ]
 
         localities = [
-            Location(name="Jerez de la Frontera", region_id=0),
-            Location(name="Chiclana de la Frontera", region_id=1)
+            Location(name="Chiclana de la Frontera", region_id=1),
+            Location(name="Frankfurt", region_id=2)
         ]
 
-        regions = [
-            Region(name="Cádiz", country_id=0),
-            Region(name="Cádiz", cuntry_id=1)
+        players = [
+            Player(name="Lucía Gutiérrez", user=users[4], points=100, location_id=1, teams=[teams[1]]),
+            Player(name="Antonio González", user=users[5], points=30, location_id=2, teams=[teams[0]])
         ]
 
         countries = [
